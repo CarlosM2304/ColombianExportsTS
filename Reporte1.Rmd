@@ -8,7 +8,7 @@ output: html_document
 ## Exploración de datos
 
 ```{r}
-df <- Serie
+df <- read.csv("Serie.csv")
 str(df)
 
 df$FOB <- gsub(",", "", df$FOB)
@@ -153,3 +153,7 @@ jarque.bera.test(res)
 qqnorm(res)
 qqline(res, col = "red")
 ```
+
+# Segundo Reporte
+
+## Análisis Espectral
