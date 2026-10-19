@@ -1,0 +1,155 @@
+---
+title: "Reporte 1 Series de Tiempo"
+author: "Carlos Méndez"
+date: "2026-09-11"
+output: html_document
+---
+
+## Exploración de datos
+
+```{r}
+df <- Serie
+str(df)
+
+df$FOB <- gsub(",", "", df$FOB)
+
+df$FOB <- as.numeric(df$FOB)
+     
+
+str(df)
+```
+
+## Visualización de la Serie
+
+```{r}
+
+ts <- ts(df$FOB, start = c(2015, 1), frequency = 12)
+ts
+
+# Ver características básicas
+start(ts)
+end(ts)
+frequency(ts)
+
+# Visualizar la serie
+plot(ts, 
+     main = "Exportaciones colombianas 2015 - 2026",
+     ylab = "FOB (USD)", 
+     xlab = "Año")
+```
+
+### Funciones de autocorrelación y autocorrelación parcial
+
+```{r}
+acf(ts, main = "ACF - Exportaciones")
+pacf(ts, main = "PACF - Exportaciones")
+```
+
+## Transformaciones
+
+### Logarítmica
+
+```{r}
+dfLog <- df
+dfLog$FOB <- log(dfLog$FOB)
+tsLog <- ts(dfLog$FOB, start = c(2015, 1), frequency = 12)
+
+# Ver características básicas
+start(tsLog)
+end(tsLog)
+frequency(tsLog)
+
+
+
+# Visualizar la serie
+plot(tsLog, 
+     main = "Exportaciones últimos 11 años (Serie Log)",
+     ylab = "FOB (USD)", 
+     xlab = "Mes")
+```
+
+```{r}
+acf(tsLog, main = "ACF - Log - Exportaciones")
+pacf(tsLog, main = "PACF - Log - Exportaciones")
+```
+
+### Diferenciación
+
+```{r}
+tsDiffLog <- diff(tsLog)
+
+#Ver la serie
+plot(tsDiffLog, 
+     main = "Exportaciones últimos 11 años (Serie diffLog)",
+     ylab = "FOB (USD)", 
+     xlab = "Mes")
+```
+
+### Funciones de AC y PAC
+
+```{r}
+acf(tsDiffLog, main = "ACF - tsdiffLog - Exportaciones")
+pacf(tsDiffLog, main = "PACF - tsdiffLog - Exportaciones")
+```
+
+```{r}
+library(forecast)
+library(TSA)
+library(tseries)
+```
+
+## Creación de modelos
+
+```{r}
+modelo <- Arima(tsLog, order = c(1, 1, 1))
+summary(modelo)
+AIC(modelo)
+```
+
+```{r}
+modelo1 <- Arima(tsLog, order = c(0, 1, 1))
+summary(modelo1)
+AIC(modelo1)
+```
+
+## Validación de supuestos
+
+### No autocorrelación
+
+```{r}
+res <- residuals(modelo1)
+Box.test(res, lag = 20, type = "Box-Pierce", fitdf = 1)
+```
+
+### Homocedasticidad
+
+```{r}
+acf(
+  res^2,
+  lag.max = 120,
+  main = "ACF de los residuos al cuadrado"
+)
+```
+
+```{r}
+library(FinTS)
+```
+
+```{r}
+ArchTest(
+  res,
+  lags = 12,
+  demean = FALSE
+)
+```
+
+### Normalidad
+
+```{r}
+jarque.bera.test(res)
+```
+
+```{r}
+qqnorm(res)
+qqline(res, col = "red")
+```
